@@ -4,29 +4,42 @@
     "version": "2.0.0",
     "tasks": [
       {
+        "label": "tauri:dev",
+        "type": "shell",
+        "command": "cargo",
+        "problemMatcher": [],
+        "args": [
+          "tauri",
+          "dev"
+        ],
+        "icon": {
+          "id": "run"
+        },
+      },
+      {
         "label": "ui:dev",
         "type": "shell",
-        // `dev` keeps running in the background
-        // ideally you should also configure a `problemMatcher`
-        // see https://code.visualstudio.com/docs/editor/tasks#_can-a-background-task-be-used-as-a-prelaunchtask-in-launchjson
         "isBackground": true,
-        // change this to your `beforeDevCommand`:
         "command": "npm",
-        "args": ["run", "dev"]
+        "problemMatcher": [],
+        "args": [
+          "run",
+          "dev",
+          "--",
+          "--clearScreen",
+          "false"
+        ]
       },
       {
         "label": "ui:build",
+        "group": "build",
         "type": "shell",
-        // change this to your `beforeBuildCommand`:
         "command": "npm",
-        "args": ["run", "build"],
-      },
-      {
-        "label": "full:dev",
-        "type": "shell",
-        "isBackground": true,
-        "command": "cargo",
-        "args": ["tauri", "dev"]
+        "problemMatcher": [],
+        "args": [
+          "run",
+          "build"
+        ]
       }
-    ]
+    ],
   }

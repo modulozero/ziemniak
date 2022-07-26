@@ -2,6 +2,14 @@
 
 A basic timer for my broken brain.
 
+## Acknowledgements
+
+- Potato icon from https://github.com/googlefonts/noto-emoji
+
+## Forking
+
+I'm developing this for myself, and have limited goals. 
+
 ## License
 
 Copyright (C) 2022 ModZero

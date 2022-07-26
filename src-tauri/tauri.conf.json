@@ -16,8 +16,8 @@
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
+      "category": "Lifestyle",
+      "copyright": "2022 ModZero",
       "deb": {
         "depends": []
       },
@@ -29,8 +29,8 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
-      "longDescription": "",
+      "identifier": "xyz.modzero.ziemniak",
+      "longDescription": "A bit more flexible interval timer",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
