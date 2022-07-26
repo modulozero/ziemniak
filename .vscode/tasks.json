@@ -20,6 +20,13 @@
         // change this to your `beforeBuildCommand`:
         "command": "npm",
         "args": ["run", "build"],
+      },
+      {
+        "label": "full:dev",
+        "type": "shell",
+        "isBackground": true,
+        "command": "cargo",
+        "args": ["tauri", "dev"]
       }
     ]
   }
