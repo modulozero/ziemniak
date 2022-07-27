@@ -1,45 +1,33 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-      {
-        "label": "tauri:dev",
-        "type": "shell",
-        "command": "cargo",
-        "problemMatcher": [],
-        "args": [
-          "tauri",
-          "dev"
-        ],
-        "icon": {
-          "id": "run"
-        },
-      },
-      {
-        "label": "ui:dev",
-        "type": "shell",
-        "isBackground": true,
-        "command": "npm",
-        "problemMatcher": [],
-        "args": [
-          "run",
-          "dev",
-          "--",
-          "--clearScreen",
-          "false"
-        ]
-      },
-      {
-        "label": "ui:build",
-        "group": "build",
-        "type": "shell",
-        "command": "npm",
-        "problemMatcher": [],
-        "args": [
-          "run",
-          "build"
-        ]
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "tauri:dev",
+      "type": "shell",
+      "command": "cargo",
+      "problemMatcher": [],
+      "args": ["tauri", "dev"],
+      "icon": {
+        "id": "run"
       }
-    ],
-  }
+    },
+    {
+      "label": "ui:dev",
+      "type": "shell",
+      "isBackground": true,
+      "command": "npm",
+      "problemMatcher": [],
+      "args": ["run", "dev", "--", "--clearScreen", "false"]
+    },
+    {
+      "label": "ui:build",
+      "group": "build",
+      "type": "shell",
+      "command": "npm",
+      "problemMatcher": [],
+      "args": ["run", "build"]
+    }
+  ]
+}

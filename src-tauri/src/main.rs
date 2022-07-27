@@ -21,19 +21,19 @@ struct Timer {
 
 impl Timer {
     fn new(message: &str, duration: Duration) -> Self {
-        return Self {
+        Self {
             id: Uuid::new_v4(),
-            duration: duration,
+            duration,
             message: message.to_string(),
             ..Default::default()
-        };
+        }
     }
 
-    fn complete(self: &Self) -> bool {
-        return self.elapsed.map_or(false, |e| e >= self.duration);
+    fn complete(&self) -> bool {
+        self.elapsed.map_or(false, |e| e >= self.duration)
     }
 
-    async fn run(self: &mut Self, window: Window) {
+    async fn run(&mut self, window: Window) {
         self.started = Some(Local::now().into());
         let mut elapsed = Duration::from_secs(0);
         self.elapsed = Some(elapsed);
@@ -45,14 +45,14 @@ impl Timer {
             let now = Instant::now();
             let duration = now - last_checked;
 
-            elapsed = elapsed + duration;
+            elapsed += duration;
             self.elapsed = Some(elapsed);
 
             if self.complete() {
                 break;
             }
 
-            if let Err(_) = window.emit("timer-tick", self.clone()) {
+            if window.emit("timer-tick", self.clone()).is_err() {
                 break;
             }
             last_checked = now;
@@ -67,7 +67,7 @@ impl Timer {
 #[tauri::command]
 fn start_timer(window: Window, duration: Duration, message: &str) -> Uuid {
     let mut timer = Timer::new(message, duration);
-    let timer_id = timer.id.clone();
+    let timer_id = timer.id;
 
     spawn(async move {
         timer.run(window).await;

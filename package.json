@@ -9,22 +9,31 @@
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "lint": "prettier --check --plugin-search-dir=. . && eslint .",
+    "format": "prettier --write --plugin-search-dir=. ."
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^1.0.1",
     "@tauri-apps/cli": "^1.0.5",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
     "@tsconfig/svelte": "^3.0.0",
     "@types/luxon": "^3.0.0",
-    "luxon": "^3.0.1",
+    "eslint": "^8.20.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-svelte3": "^4.0.0",
+    "prettier": "^2.7.1",
+    "prettier-plugin-svelte": "^2.7.0",
     "svelte": "^3.49.0",
     "svelte-check": "^2.8.0",
     "svelte-preprocess": "^4.10.7",
     "tslib": "^2.4.0",
-    "typescript": "^4.6.4",
+    "typescript": "^4.7.4",
     "vite": "^3.0.0"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.0.2"
+    "@tauri-apps/api": "^1.0.2",
+    "luxon": "^3.0.1"
   }
 }
