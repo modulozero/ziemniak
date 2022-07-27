@@ -1,3 +1,7 @@
+<!--
+ Copyright 2022 ModZero.
+ SPDX-License-Identifier: 	AGPL-3.0-or-later
+-->
 <script type="ts">
   import { onDestroy, onMount } from "svelte";
   import type { UnlistenFn } from "@tauri-apps/api/event";
@@ -5,8 +9,8 @@
   import { listen } from "@tauri-apps/api/event";
 
   let seconds = 5;
-  let timer_tick_unlisten: Promise<UnlistenFn> | null = null;
-  let timer_done_unlisten: Promise<UnlistenFn> | null = null;
+  let timerTickUnlisten: Promise<UnlistenFn> | null = null;
+  let timerDoneUnlisten: Promise<UnlistenFn> | null = null;
 
   type Timer = {
     id: string;
@@ -17,32 +21,58 @@
   };
 
   onMount(() => {
-    timer_tick_unlisten = listen<Timer>("timer-tick", (event) => {
+    timerTickUnlisten = listen<Timer>("timer-tick", (event) => {
       console.log("Tick!", event.payload.id, event.payload.elapsed);
     });
 
-    timer_done_unlisten = listen<Timer>("timer-done", (event) => {
+    timerDoneUnlisten = listen<Timer>("timer-done", (event) => {
       console.log("Done!", event.payload.id);
     });
+    
   });
 
   onDestroy(() => {
-    timer_tick_unlisten?.then((ttu) => ttu());
-    timer_done_unlisten?.then((tdu) => tdu());
+    timerTickUnlisten?.then((ttu) => ttu());
+    timerDoneUnlisten?.then((tdu) => tdu());
   });
 
-  function start_timer() {
-    invoke("start_timer", {
+  async function startTimer() {
+    let timer = await invoke<Timer>("make_timer", {
       duration: { secs: seconds, nanos: 0 },
       message: "Hi!",
     });
+    invoke("start_timer", { timerId: timer.id });
   }
 </script>
 
 <main>
-  <label>
-    Fire after
-    <input type="number" bind:value={seconds} />
-  </label>
-  <button on:click={start_timer}>Fire!</button>
+  <div id="timer" />
+  <div id="controls">
+    <label>
+      Fire after
+      <input type="number" bind:value={seconds} />
+    </label>
+    <button on:click={startTimer}>Fire!</button>
+  </div>
 </main>
+
+<style>
+  main {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    display: flex;
+    flex-direction: column;
+  }
+  #timer {
+    flex-grow: 1;
+    margin: 0.5em;
+  }
+
+  #controls {
+    margin: 0.5em;
+    padding: 0.5em;
+  }
+</style>

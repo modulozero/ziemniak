@@ -3,12 +3,33 @@
     windows_subsystem = "windows"
 )]
 
-use std::time::{Duration, Instant};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::{Duration, Instant}, fmt, error::Error,
+};
 
 use chrono::{DateTime, FixedOffset, Local};
-use tauri::{async_runtime::spawn, Window};
+use tauri::{State, Window, async_runtime::spawn};
 use tokio::time::interval;
 use uuid::Uuid;
+
+#[derive(serde::Serialize, Debug)]
+enum TimerError {
+    NotFound,
+    NotStarted,
+}
+
+impl fmt::Display for TimerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TimerError::NotFound => write!(f, "timer not found"),
+            TimerError::NotStarted => write!(f, "timer not started"),
+        }
+    }
+}
+
+impl Error for TimerError {}
 
 #[derive(Clone, Default, serde::Serialize)]
 struct Timer {
@@ -17,6 +38,8 @@ struct Timer {
     duration: Duration,
     elapsed: Option<Duration>,
     message: String,
+    #[serde(skip)]
+    checked: Option<Instant>,
 }
 
 impl Timer {
@@ -33,52 +56,119 @@ impl Timer {
         self.elapsed.map_or(false, |e| e >= self.duration)
     }
 
-    async fn run(&mut self, window: Window) {
-        self.started = Some(Local::now().into());
-        let mut elapsed = Duration::from_secs(0);
-        self.elapsed = Some(elapsed);
-        let mut last_checked = Instant::now();
-
-        let mut interval = interval(Duration::from_secs(1) / 60);
-        loop {
-            interval.tick().await;
-            let now = Instant::now();
-            let duration = now - last_checked;
-
-            elapsed += duration;
-            self.elapsed = Some(elapsed);
-
-            if self.complete() {
-                break;
-            }
-
-            if window.emit("timer-tick", self.clone()).is_err() {
-                break;
-            }
-            last_checked = now;
+    fn start(self) -> Self {
+        Timer {
+            started: Some(Local::now().into()),
+            elapsed: Some(Duration::from_secs(0)),
+            checked: Some(Instant::now()),
+            ..self
         }
+    }
 
-        window
-            .emit("timer-done", self.clone())
-            .expect("Our window went away?");
+    fn tick(self) -> Result<Self, TimerError> {
+        let now = Instant::now();
+        let elapsed = now - match self.checked {
+            None => return Err(TimerError::NotStarted),
+            Some(checked) => checked,
+        };
+
+        Ok(Timer {
+            elapsed: self.elapsed.map(|e| e + elapsed),
+            checked: Some(now),
+            ..self
+        })
     }
 }
 
+#[derive(Default)]
+struct Timers(Arc<Mutex<HashMap<Uuid, Timer>>>);
+
+impl Timers {
+    fn make_timer(&self, duration: Duration, message: &str) -> Timer {
+        let timer = Timer::new(message, duration);
+
+        self.0.lock().unwrap().insert(timer.id, timer.clone());
+
+        timer
+    }
+
+    fn delete_timer(&self, timer_id: Uuid) -> Option<Timer> {
+        self.0.lock().unwrap().get(&timer_id).cloned()
+    }
+
+    fn start_timer(&self, timer_id: Uuid) -> Result<Timer, TimerError> {
+        let mut timers = self.0.lock().unwrap();
+        match timers.get(&timer_id).cloned() {
+            None => Err(TimerError::NotFound),
+            Some(t) => {
+                let started = t.start();
+                timers.insert(started.id, started.clone());
+
+                Ok(started)
+            }
+        }
+    }
+
+    fn tick_timer(&self, timer_id: Uuid) -> Result<Timer, TimerError> {
+        let mut timers = self.0.lock().unwrap();
+        match timers.get(&timer_id).cloned() {
+            None => Err(TimerError::NotFound),
+            Some(t) => {
+                let started = t.tick()?;
+                timers.insert(started.id, started.clone());
+
+                Ok(started)
+            }
+        }
+    }
+
+}
+
 #[tauri::command]
-fn start_timer(window: Window, duration: Duration, message: &str) -> Uuid {
-    let mut timer = Timer::new(message, duration);
-    let timer_id = timer.id;
+fn make_timer(timers: State<'_, Timers>, duration: Duration, message: &str) -> Timer {
+    timers.make_timer(duration, message)
+}
+
+#[tauri::command]
+fn delete_timer(timers: State<'_, Timers>, timer_id: Uuid) -> Option<Timer> {
+    timers.delete_timer(timer_id)
+}
+
+#[tauri::command]
+fn start_timer(window: Window, timers: State<'_, Timers>, timer_id: Uuid) -> Result<Timer, TimerError> {
+    let timers = Timers(timers.0.to_owned());
+    let timer = timers.start_timer(timer_id)?;
+    let res = timer.clone();
 
     spawn(async move {
-        timer.run(window).await;
+        let mut interval = interval(Duration::from_secs(1) / 60);
+        
+        loop {
+            interval.tick().await;
+            match timers.tick_timer(timer_id) {
+                Err(_) => break,
+                Ok(timer) => {
+                    if timer.complete() || window.emit("timer-tick", timer).is_err() {
+                        break;
+                    }
+                }
+            }
+        }
+
+        window.emit("timer-done", timer).ok();
     });
 
-    timer_id
+    Ok(res)
 }
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![start_timer])
+        .manage(Timers(Default::default()))
+        .invoke_handler(tauri::generate_handler![
+            delete_timer,
+            make_timer,
+            start_timer
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
