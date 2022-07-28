@@ -28,7 +28,6 @@
     timerDoneUnlisten = listen<Timer>("timer-done", (event) => {
       console.log("Done!", event.payload.id);
     });
-    
   });
 
   onDestroy(() => {
@@ -37,11 +36,11 @@
   });
 
   async function startTimer() {
-    let timer = await invoke<Timer>("make_timer", {
+    let timer = await invoke<Timer>("plugin:timers|make", {
       duration: { secs: seconds, nanos: 0 },
       message: "Hi!",
     });
-    invoke("start_timer", { timerId: timer.id });
+    invoke("plugin:timers|start", { timerId: timer.id });
   }
 </script>
 

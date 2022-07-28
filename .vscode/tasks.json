@@ -28,6 +28,13 @@
       "command": "npm",
       "problemMatcher": [],
       "args": ["run", "build"]
+    },
+    {
+      "label": "ui:format",
+      "type": "shell",
+      "command": "npm",
+      "problemMatcher": [],
+      "args": ["run", "format"]
     }
   ]
 }
