@@ -7,4 +7,9 @@ export default defineConfig({
   build: {
     write: true,
   },
+  resolve: {
+    alias: {
+      "@app": "./src/",
+    },
+  },
 });
